@@ -1,6 +1,7 @@
 import FileLib as f
 import time
 import os
+import re
 
 def takePath():
     while True:
@@ -27,7 +28,14 @@ def takePath():
 
 def main():
     path = takePath()
-    f.getAllImageExt(path, f.getAllImages(path))
+    imageList = f.getAllImages(path)
+    f.getAllImageExt(path, imageList)
+    duImageList = f.findDuplicateImages(path,imageList,"(1)")
+    os.chdir(path)
+    os.chdir("..")
+    homePath = os.curdir
+    print(os.getcwd())
+    f.copyFiles(homePath,"copies",duImageList)
 
 
 if __name__ == '__main__':

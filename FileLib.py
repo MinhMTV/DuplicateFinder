@@ -5,7 +5,8 @@ import pathlib
 import timeit
 import time
 import glob
-
+import re
+import shutil
 
 valid_images = ["ase", "art", "bmp", "blp", "cd5", "cit", "cpt", "cr2", "cut", "dds", "dib", "djvu", "egt", "exif", "gif", "gpl", "grf", "icns", "ico", "iff", "jng", "jpeg", "jpg", "jfif", "jp2", "jps",
                 "lbm", "max", "miff", "mng", "msp", "nitf", "ota", "pbm", "pc1", "pc2", "pc3", "pcf", "pcx", "pdn", "pgm", "PI1", "PI2", "PI3", "pict", "pct", "pnm", "pns", "ppm", "psb", "psd", "pdd",
@@ -107,9 +108,73 @@ def getAllImageExt(path, ImageList):
                 SplitTypes.append(file_name.split(".")[-1])
     print(SplitTypes)
 
-# def main():
-#     path = takePath()
-#     getAllImageExt(path, getAllImages(path))
+def findDuplicateImages(path,ImageList,indicator):
+    duImageList = []
+    for images in ImageList:
+        for filepath in images:
+            pos = filepath.rfind(".")
+            if indicator in filepath[len(filepath[:pos])-len(indicator):pos]:
+                duImageList.append(filepath)
+    print("There are " + str(len(duImageList)) +
+          " duplicate Images in this Folder")
+    return duImageList
 
-# if __name__ == '__main__':
-#      main()
+def copyFiles(newDirPath,FolderName,FileList):
+    copyFolderPath = os.path.join(newDirPath,FolderName)
+    cnt_new = 0
+    cnt_exist = 0
+    destImgList = []
+    if os.path.isdir(copyFolderPath):
+        print("folder already exist")
+    else:
+        os.mkdir(copyFolderPath)
+
+    fileNames = getFileName(FileList)
+    print("All File Names: ")
+    tic = time.perf_counter()
+    destFolderImg = getAllImages(copyFolderPath)
+    for Image in destFolderImg:
+        for x in Image:
+            destImgList.append(x)
+
+    for x in FileList:
+        if len(destImgList) > 0:
+                if getFileName(x) in getFileName(destImgList):
+                    cnt_exist += 1
+                else:
+                    copyFile(x,copyFolderPath)
+                    cnt_new += 1
+        else:
+            copyFile(x,copyFolderPath)
+            cnt_new += 1
+
+    toc = time.perf_counter()
+    print(f"Copy Files took {toc - tic:0.4f} seconds")
+    print(f"{cnt_new} New Files were copied")
+    print(f"{cnt_exist} Files already existed")
+    print(f"{cnt_exist + cnt_new} total Files are in the directory")
+
+def copyFile(file,destpath):
+    try:
+        shutil.copy(file,destpath)
+        print(getFileName(file))
+        # If source and destination are same
+    except shutil.SameFileError:
+        print("Source and destination represents the same file.")
+
+# If there is any permission issue
+    except PermissionError:
+        print("Permission denied.")
+
+# # For other errors
+#     except:
+#         print("Error occurred while copying file.")
+
+def getFileName(FileList):
+    fileNames = []
+    if isinstance(FileList, list):
+        for x in FileList:
+            fileNames.append(os.path.basename(x))
+        return fileNames
+    elif isinstance(FileList, str):
+        return os.path.basename(FileList)
