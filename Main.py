@@ -3,6 +3,10 @@ import time
 import os
 import re
 
+indicator = "(1)"
+CpyFldName = "Double_Images"
+
+
 def takePath():
     while True:
         answer = input(
@@ -30,12 +34,12 @@ def main():
     path = takePath()
     imageList = f.getAllImages(path)
     f.getAllImageExt(path, imageList)
-    duImageList = f.findDuplicateImages(path,imageList,"(1)")
+    duImageList = f.findDuplicateImages(path,imageList,indicator)
     os.chdir(path)
     os.chdir("..")
     homePath = os.curdir
     print(os.getcwd())
-    f.copyFiles(homePath,"copies",duImageList)
+    f.copyFiles(homePath,CpyFldName,duImageList,imageList,indicator)
 
 
 if __name__ == '__main__':

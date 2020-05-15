@@ -119,34 +119,48 @@ def findDuplicateImages(path,ImageList,indicator):
           " duplicate Images in this Folder")
     return duImageList
 
-def copyFiles(newDirPath,FolderName,FileList):
+#ImgList all Images in List with path
+#DuList duplicateImages with path
+#newDirPath Dirpath where new Folder for Copies is created
+#FolderName folderName for new Folder
+def copyFiles(newDirPath,FolderName,DuList,ImgList,Indicator):
     copyFolderPath = os.path.join(newDirPath,FolderName)
     cnt_new = 0
     cnt_exist = 0
     destImgList = []
+    scrImgList = []
+    doubleImg = []
     if os.path.isdir(copyFolderPath):
         print("folder already exist")
     else:
         os.mkdir(copyFolderPath)
 
-    fileNames = getFileName(FileList)
-    print("All File Names: ")
+#filenames duplicateImagesName without path
+    fileNames = getFileName(DuList)
     tic = time.perf_counter()
     destFolderImg = getAllImages(copyFolderPath)
     for Image in destFolderImg:
         for x in Image:
             destImgList.append(x)
+    for Image in ImgList:
+        for x in Image:
+            scrImgList.append(x)
+    filewOrg = checkDuplicate(DuList,scrImgList,Indicator)
 
-    for x in FileList:
-        if len(destImgList) > 0:
-                if getFileName(x) in getFileName(destImgList):
-                    cnt_exist += 1
-                else:
-                    copyFile(x,copyFolderPath)
-                    cnt_new += 1
-        else:
-            copyFile(x,copyFolderPath)
-            cnt_new += 1
+    for x in filewOrg[0]:
+        if getFileName(x) not in doubleImg:
+            if len(destImgList) > 0:
+                    if getFileName(x) in getFileName(destImgList):
+                        doubleImg.append(getFileName(x))
+                        cnt_exist += 1
+                    else:
+                        doubleImg.append(getFileName(x))
+                        copyFile(x,copyFolderPath)
+                        cnt_new += 1
+            else:
+                doubleImg.append(getFileName(x))
+                copyFile(x,copyFolderPath)
+                cnt_new += 1
 
     toc = time.perf_counter()
     print(f"Copy Files took {toc - tic:0.4f} seconds")
@@ -167,8 +181,25 @@ def copyFile(file,destpath):
         print("Permission denied.")
 
 # # For other errors
-#     except:
-#         print("Error occurred while copying file.")
+    except:
+        print("Error occurred while copying file.")
+
+#check if file with indicator is really duplicate or if its the only file without original
+#duList List of duplicateImages w path
+#fileList List of all Img in Folders
+def checkDuplicate(duList, fileList,indicator):
+    dupList = []
+    dupwOrg =  []
+    for dup in duList:
+        duExt = "." + getFileName(dup).split(".")[-1]
+        dutemp = getFileName(dup)[:-len(indicator)-len(duExt)]
+        dutemp = dutemp + duExt
+        for x in fileList:
+            if getFileName(x) == dutemp:
+                dupwOrg.append(dup)
+
+    dupList = [dupwOrg,[x for x in duList if x not in dupwOrg]]
+    return dupList #[DuplicatePath with Original Files, DuplicateFiles W/o Orginal Files]
 
 def getFileName(FileList):
     fileNames = []
